@@ -6,11 +6,13 @@ calculate urgency values for taskwarrior tasks
 import argparse
 import subprocess
 import json
+from math import floor
 
 
 class UrgencyData(object):
     def __init__(self):
         self._data = []
+        self._urgencies = []
         pass
 
     @property
@@ -20,24 +22,40 @@ class UrgencyData(object):
             average = self.sum_urgency / self.task_count
         return average
 
-    def _get_urgency_list(self):
-        return [item.get('urgency') for item in self._data]
+    @property
+    def median_urgency(self):
+        urgencies = self.get_urgencies()
+        idx = int(floor(self.task_count / 2))
+        even_number_of_elements = self.task_count % 2 == 0
+        if even_number_of_elements:
+            median = (urgencies[idx] + urgencies[idx + 1]) / 2
+        else:
+            median = urgencies[idx]
+        return median
+
+    def get_urgencies(self):
+        return self._urgencies
 
     @property
     def max_urgency(self):
-        return max(self._get_urgency_list())
+        return max(self.get_urgencies())
 
     @property
     def task_count(self):
-        return len(self._get_urgency_list())
+        return len(self.get_urgencies())
 
     @property
     def sum_urgency(self):
-        return sum(self._get_urgency_list())
+        return sum(self.get_urgencies())
+
+    def _update_data(self):
+        self._data = sorted(self._data, key=lambda k: k['urgency'])
+        self._urgencies = [item.get('urgency') for item in self._data]
 
     def parse_json(self, json_data):
         for item in json_data:
             self._data.append(item)
+        self._update_data()
 
 
 def get_json(filter):
@@ -47,9 +65,10 @@ def get_json(filter):
     json_data = json.loads(out)
     return json_data
 
+
 def print_condensed(data):
-    print('avg/max/count: {:.1f}/{:.1f}/{}'.format(
-        data.average_urgency, data.max_urgency, data.task_count))
+    print('median/avg/sum/count: {:.1f}/{:.1f}/{:.1f}/{}'.format(
+        data.median_urgency, data.average_urgency, data.sum_urgency, data.task_count))
 
 
 def run_main(args, filterstring='+PENDING'):
