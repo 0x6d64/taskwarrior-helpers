@@ -10,9 +10,14 @@ import numpy
 
 
 class UrgencyData(object):
-    def __init__(self):
+    def __init__(self, allow_negative_values=False):
+        """
+        Container for urgency data that can be read from a dict
+        :param allow_negative_values: set to True to treat negative value like 0
+        """
         self._data = []
         self._urgencies = []
+        self.allow_negative_values = allow_negative_values
         pass
 
     @property
@@ -30,7 +35,10 @@ class UrgencyData(object):
         return median
 
     def get_urgencies(self):
-        return self._urgencies
+        retval = self._urgencies
+        if not self.allow_negative_values:
+            retval = [val if val > 0 else 0 for val in self._urgencies]
+        return retval
 
     @property
     def max_urgency(self):
@@ -48,7 +56,7 @@ class UrgencyData(object):
         self._data = sorted(self._data, key=lambda k: k['urgency'])
         self._urgencies = [item.get('urgency') for item in self._data]
 
-    def parse_json(self, json_data):
+    def parse_data(self, json_data):
         for item in json_data:
             self._data.append(item)
         self._update_data()
@@ -68,9 +76,8 @@ def print_condensed(data):
 
 
 def run_main(args, filterstring='+PENDING'):
-    json_raw = get_json(filterstring)
-    data = UrgencyData()
-    data.parse_json(json_raw)
+    data = UrgencyData(allow_negative_values=True)
+    data.parse_data(get_json(filterstring))
 
     print_condensed(data)
     return 0
