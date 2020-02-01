@@ -6,7 +6,7 @@ calculate urgency values for taskwarrior tasks
 import argparse
 import subprocess
 import json
-from math import floor
+import numpy
 
 
 class UrgencyData(object):
@@ -19,18 +19,14 @@ class UrgencyData(object):
     def average_urgency(self):
         average = None
         if self.task_count != 0:
-            average = self.sum_urgency / self.task_count
+            average = numpy.average(self.get_urgencies())
         return average
 
     @property
     def median_urgency(self):
-        urgencies = self.get_urgencies()
-        idx = int(floor(self.task_count / 2))
-        even_number_of_elements = self.task_count % 2 == 0
-        if even_number_of_elements:
-            median = (urgencies[idx] + urgencies[idx + 1]) / 2
-        else:
-            median = urgencies[idx]
+        median = None
+        if self.task_count != 0:
+            median = numpy.median(self.get_urgencies())
         return median
 
     def get_urgencies(self):
