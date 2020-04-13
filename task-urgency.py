@@ -4,18 +4,8 @@
 calculate urgency values for taskwarrior tasks
 """
 import argparse
-import subprocess
-import json
+
 from twhelpers.urgency import UrgencyData
-
-
-
-def get_json(filter):
-    command = ['task', filter, 'export']
-    sp = subprocess.Popen(command, stdout=subprocess.PIPE)
-    out, err = sp.communicate()
-    json_data = json.loads(out)
-    return json_data
 
 
 def print_condensed(data):
@@ -25,7 +15,7 @@ def print_condensed(data):
 
 def run_main(args, filterstring='+PENDING'):
     data = UrgencyData(allow_negative_values=True)
-    data.parse_data(get_json(filterstring))
+    data.get_data(filterstring)
 
     print_condensed(data)
     return 0

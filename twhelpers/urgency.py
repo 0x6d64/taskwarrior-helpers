@@ -1,6 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import numpy
+import subprocess
+import json
+
+class TwExport(object):
+    @staticmethod
+    def get_json(filter):
+        command = ['task', filter, 'export']
+        sp = subprocess.Popen(command, stdout=subprocess.PIPE)
+        out, err = sp.communicate()
+        json_data = json.loads(out)
+        return json_data
 
 class UrgencyData(object):
     def __init__(self, allow_negative_values=False):
@@ -49,7 +60,8 @@ class UrgencyData(object):
         self._data = sorted(self._data, key=lambda k: k['urgency'])
         self._urgencies = [item.get('urgency') for item in self._data]
 
-    def parse_data(self, json_data):
+    def get_data(self, filterstring):
+        json_data = TwExport.get_json(filterstring)
         for item in json_data:
             self._data.append(item)
         self._update_data()
